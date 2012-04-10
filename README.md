@@ -51,6 +51,7 @@ Log messages are output based on your setting of *DEBUG_LOG* preprocessor macro.
     [SQLiteLibrary performQuery:@"INSERT INTO tablename (bar, foo) VALUES(2,3)" block:nil];
 
     # Select query
+    # The block will be called once for every row returned from the query
     [SQLiteLibrary performQuery:@"SELECT foo, bar FROM tablename" block:^(sqlite3_stmt *rowData) {
         NSString* stringValue = sqlite3_column_nsstring(rowData, 0);
         int intValue = sqlite3_column_int(rowData, 1);
