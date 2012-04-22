@@ -34,6 +34,9 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 */
 + (BOOL)begin;
 
++ (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement;
+
+
 /**
 * Commit transaction (singleton edition)
 */

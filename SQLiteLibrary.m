@@ -103,6 +103,57 @@
 }
 
 
++ (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement {
+
+    int columns = sqlite3_column_count(statement);
+    NSMutableDictionary *result = [[NSMutableDictionary alloc] initWithCapacity:columns];
+
+    for (int i = 0; i<columns; i++) {
+        const char *name = sqlite3_column_name(statement, i);
+
+        NSString *columnName = [NSString stringWithCString:name encoding:NSUTF8StringEncoding];
+
+        int type = sqlite3_column_type(statement, i);
+
+        switch (type) {
+            case SQLITE_INTEGER:
+            {
+                int value = sqlite3_column_int(statement, i);
+                [result setObject:[NSNumber numberWithInt:value] forKey:columnName];
+                break;
+            }
+            case SQLITE_FLOAT:
+            {
+                float value = sqlite3_column_int(statement, i);
+                [result setObject:[NSNumber numberWithFloat:value] forKey:columnName];
+                break;
+            }
+            case SQLITE_TEXT:
+            {
+                const char *value = (const char*)sqlite3_column_text(statement, i);
+                [result setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:columnName];
+                break;
+            }
+
+            case SQLITE_BLOB:
+                break;
+            case SQLITE_NULL:
+                //[result setObject:[NSNull null] forKey:columnName];
+                break;
+
+            default:
+            {
+                const char *value = (const char *)sqlite3_column_text(statement, i);
+                [result setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:columnName];
+                break;
+            }
+
+        } //end switch
+    }
+    return [result autorelease];
+}
+
+
 - (int64_t)performQueryInTransaction:(NSString *)query block:(SQLiteBlock)block
 {
 	BOOL shouldCommit = NO;
