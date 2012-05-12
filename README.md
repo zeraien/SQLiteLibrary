@@ -18,7 +18,7 @@ Before using the library you have to set the name of your preferred database fil
     [SQLiteLibrary setDatabaseFileInCache:@"dbstuff.sqlite"];
 
 After setting the file name, the code below will copy the file **data_skeleton.sqlite3** to the file you specified above.
-Note that this will **NOT** override the file, **UNLESS** you specify *true* as the **ForceReset** parameter.
+Note that this will **NOT** override the file, **UNLESS** you specify `YES` as the `ForceReset` parameter.
 
     [SQLiteLibrary setupDatabaseAndForceReset:NO];
 
@@ -86,7 +86,7 @@ Calling `begin` initiates a thread lock, and the lock is only released only when
 So once an SQL transaction is started, all other database access will be put on hold until the thread
 that begun the transaction calls `commit`.
 
-Note: A single query outside a transaction calls begin/commit, and so follows the above principle.
+Note: A single query outside a transaction calls `begin` and `commit`, and thus follows the above principle.
 
 ### Rollback
 
