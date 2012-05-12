@@ -38,10 +38,10 @@ Use this for databases that store persistent data such as user profiles or game 
 
 ## Logging
 
-Log messages are output based on your setting of *DEBUG_LOG* preprocessor macro.
+Log messages are output based on your setting of `DEBUG_LOG` preprocessor macro.
 
-* 1 - outputs basic messages and errors
-* 2 - outputs every query and lots of other data
+* `DEBUG_LOG=1` - outputs basic messages and errors
+* `DEBUG_LOG=2` - outputs every query and lots of other data
 
 ## Typical usage scenario
 
@@ -62,7 +62,7 @@ Log messages are output based on your setting of *DEBUG_LOG* preprocessor macro.
 
 The `performQuery:` method returns different integer values depending on the query:
 
-* **INSERT** returns the id of the inserted row
+* **INSERT** returns the id of the *last* inserted row
 * **UPDATE** returns the number of affected rows
 * **SELECT** returns number of found rows
 
