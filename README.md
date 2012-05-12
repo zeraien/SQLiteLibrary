@@ -1,4 +1,4 @@
-This is a very simple SQLite wrapper for Mac OS X and iOS development.
+This is a very simple *thread safe* SQLite wrapper for Mac OS X and iOS development.
 
 It is a singleton, so it allows for a single database connection. That being said, the library is thread
 safe and if multiple threads attempt to do SQL operations, they will be queued up until the current
