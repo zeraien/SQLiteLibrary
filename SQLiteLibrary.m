@@ -31,9 +31,12 @@
 + (void)setDatabaseFile:(NSString *)dbFilePath
 {
     SQLiteLibrary * me = [self singleton];
-    [me->dbFilePath_ release]; me->dbFilePath_ = nil;
+    @synchronized (self)
+    {
+        [me->dbFilePath_ release]; me->dbFilePath_ = nil;
 
-    me->dbFilePath_ = [dbFilePath copy];
+        me->dbFilePath_ = [dbFilePath copy];
+    }
 }
 
 + (SQLiteLibrary *)singleton
@@ -57,10 +60,17 @@
 	if (self)
 	{
 		database = nil;
+		lock = [[NSRecursiveLock alloc]init];
 	}
 
 	return self;
 
+}
+
+- (void)dealloc
+{
+    [lock release];
+    [super dealloc];
 }
 
 + (BOOL)begin
@@ -69,6 +79,13 @@
 }
 - (BOOL)begin
 {
+    [lock lock];
+    if (database!=nil)
+    {
+        [self commit];
+        [lock lock];
+    }
+
     NSAssert(dbFilePath_!=nil, @"dbFilePath must be set!");
 
 	NSString*dbPath = dbFilePath_;
@@ -76,9 +93,6 @@
 	NSLog(@"Using sqlite database at path %@", dbPath);
 #endif
 	NSAssert([[NSFileManager defaultManager] isReadableFileAtPath:dbPath], ODBsprintf(@"Database file does not exist %@", dbPath));
-
-	if (database!=nil)
-		[self commit];
 
 	NSAssert(database==nil, @"Attempted to start transaction while another is in progress.");
 	
@@ -156,11 +170,13 @@
 
 - (int64_t)performQueryInTransaction:(NSString *)query block:(SQLiteBlock)block
 {
+	[lock lock];
+
 	BOOL shouldCommit = NO;
 	if (database == nil)
 	{
-#if DEBUG_LOG>=1
-		NSLog(@"======> SQLITE WARNING ===============> No transaction started, forcing autocommit");
+#if DEBUG_LOG>=2
+		NSLog(@"======> SQLITE INFO ===============> No transaction started, forcing autocommit");
 #endif
         shouldCommit=YES;
 		[self begin];
@@ -211,6 +227,8 @@
 	sqlite3_finalize(compiledStatement);
 	if (shouldCommit)
 		[self commit];
+
+	[lock unlock];
 	return returnValue;
 }
 
@@ -221,7 +239,13 @@
 
 - (BOOL)commit
 {
-	if (database == nil) return NO;
+    [lock lock];
+
+    if (database == nil)
+    {
+        [lock unlock];
+        return NO;
+    }
 
 	sqlite3_exec(database, "COMMIT;", NULL, NULL, NULL);
 	BOOL success = YES;
@@ -237,6 +261,9 @@
 #endif
 	sqlite3_close(database);
 	database = nil;
+
+    [lock unlock];
+    [lock unlock];
 	return success;
 }
 

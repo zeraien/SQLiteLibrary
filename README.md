@@ -1,8 +1,10 @@
 This is a very simple SQLite wrapper for Mac OS X and iOS development.
 
-It's not thread safe and is a singleton, so it allows for a single database connection.
+It is a singleton, so it allows for a single database connection. That being said, the library is thread
+safe and if multiple threads attempt to do SQL operations, they will be queued up until the current
+thread is done (i.e. the database transaction is committed).
 
-It has support for transactions and uses blocks heavily.
+It has support for transactions and uses blocks.
 
 ## Data skeleton and data locations
 
@@ -56,7 +58,14 @@ Log messages are output based on your setting of *DEBUG_LOG* preprocessor macro.
         NSString* stringValue = sqlite3_column_nsstring(rowData, 0);
         int intValue = sqlite3_column_int(rowData, 1);
     }];
-    
+
+
+The `performQuery:` method returns different integer values depending on the query:
+
+* **INSERT** returns the id of the inserted row
+* **UPDATE** returns the number of affected rows
+* **SELECT** returns number of found rows
+
 ## Using transactions
 
 By default every query is performed in it's own transaction, however if you are performing lots
@@ -70,7 +79,19 @@ of insert queries using transactions increases performance quite a bit.
     [SQLiteLibrary performQuery:@"INSERT INTO tablename (bar, foo) VALUES(512,352)" block:nil];
     [SQLiteLibrary commit];
 
+### Threads
 
-## sqlite3_column_nsstring
+Calling `begin` initiates a thread lock, and the lock is only released only when `commit` is called.
+
+So once an SQL transaction is started, all other database access will be put on hold until the thread
+that begun the transaction calls `commit`.
+
+Note: A single query outside a transaction calls begin/commit, and so follows the above principle.
+
+### Rollback
+
+There is currently no rollback support.
+
+## sqlite3\_column\_nsstring
 
 I've written a custom macro *sqlite3_column_nsstring* for extracting NSString objects from SQLite c strings.

@@ -14,11 +14,14 @@
 							(char *)sqlite3_column_text(_statement_, __column__)? \
 									make_nil_if_null([NSString stringWithUTF8String:(char *)sqlite3_column_text(_statement_, __column__)]):nil
 
+#define sqlite3_to_string sqlite3_column_nsstring
+
 typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 
 @interface SQLiteLibrary : NSObject
 {
 	sqlite3 *database;
+	NSRecursiveLock *lock;
 }
 + (SQLiteLibrary *)singleton;
 
@@ -52,6 +55,7 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 *
 * @param query SQL query
 * @param block Block with SQL result
+* @return Returns different values depending on query: INSERT returns the id of the inserted row, UPDATE returns the number of affected rows, SELECT returns number of found rows
 * */
 + (int64_t)performQuery:(NSString *)query block:(SQLiteBlock)block;
 
