@@ -167,6 +167,64 @@
     return [result autorelease];
 }
 
++ (NSArray *)performQueryAndGetResultList:(NSString *)query
+{
+    return [[self singleton] performQueryAndGetResultList:query];
+}
+
+- (NSArray *)performQueryAndGetResultList:(NSString *)query
+{
+	[lock lock];
+
+	BOOL shouldCommit = NO;
+	if (database == nil)
+	{
+#if DEBUG_LOG>=2
+		NSLog(@"======> SQLITE INFO ===============> No transaction started, forcing autocommit");
+#endif
+        shouldCommit=YES;
+		[self begin];
+	}
+	NSAssert(database!=nil, @"Must begin a transaction first.");
+	if (database == nil) return NO;
+
+#if DEBUG_LOG>=2
+	NSLog(@"Performing query:\n\t%@", query);
+#endif
+	// Setup the SQL Statement and compile it for faster access
+	sqlite3_stmt *compiledStatement;
+    NSMutableArray* returnData = [NSMutableArray array];
+
+	if(sqlite3_prepare_v2(database, [query UTF8String], -1, &compiledStatement, NULL) == SQLITE_OK)
+    {
+		// Loop through the results and add them to the feeds array
+        while(sqlite3_step(compiledStatement) == SQLITE_ROW)
+        {
+            [returnData addObject:[SQLiteLibrary dictionaryForRowData:compiledStatement]];
+        }
+
+#if DEBUG_LOG>=2
+		if (sqlite3_errcode(database) != SQLITE_DONE && sqlite3_errcode(database)>0)
+		{
+			NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+		}
+#endif
+
+	}
+#if DEBUG_LOG>=1
+	else
+	{
+		NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+	}
+#endif
+	// Release the compiled statement from memory
+	sqlite3_finalize(compiledStatement);
+	if (shouldCommit)
+		[self commit];
+
+	[lock unlock];
+	return returnData;
+}
 
 - (int64_t)performQueryInTransaction:(NSString *)query block:(SQLiteBlock)block
 {
