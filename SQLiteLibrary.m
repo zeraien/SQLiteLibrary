@@ -104,14 +104,14 @@
 		if (sqlite3_errcode(database) != SQLITE_DONE && sqlite3_errcode(database)>0)
 		{
 #if DEBUG_LOG>=1
-			NSLog(@"======> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+			NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
 #endif
 			return NO;
 		}
 		return YES;
 	}
 #if DEBUG_LOG>=1
-	NSLog(@"======> SQLITE ERROR ===============> Failed to open SQLite database %@;", dbPath);
+	NSLog(@"!!!!!!> SQLITE ERROR ===============> Failed to open SQLite database %@;", dbPath);
 #endif
 	return NO;
 }
@@ -205,7 +205,7 @@
 #if DEBUG_LOG>=2
 		if (sqlite3_errcode(database) != SQLITE_DONE && sqlite3_errcode(database)>0)
 		{
-			NSLog(@"======> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+			NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
 		}
 #endif
 		if ([[query uppercaseString] hasPrefix:@"INSERT"])
@@ -220,7 +220,7 @@
 #if DEBUG_LOG>=1
 	else
 	{
-		NSLog(@"======> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+		NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
 	}
 #endif
 	// Release the compiled statement from memory
@@ -252,7 +252,7 @@
 	if (sqlite3_errcode(database) != SQLITE_DONE && sqlite3_errcode(database)>0)
 	{
 #if DEBUG_LOG>=1
-		NSLog(@"======> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+		NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
 #endif
         success=NO;
 	}
