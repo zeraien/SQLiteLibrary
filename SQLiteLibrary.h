@@ -7,17 +7,6 @@
 #import <Foundation/Foundation.h>
 #import <sqlite3.h>
 
-#define ODBsprintf(format, ...) [NSString stringWithFormat:format, ## __VA_ARGS__]
-
-#define sqlite_now_epoch @"strftime('%s','now')"
-#define make_nil_if_null(__string__) (__string__==nil||[__string__ isEqualToString:@"(null)"])?nil:__string__
-
-#define sqlite3_column_nsstring(_statement_, __column__) \
-							(char *)sqlite3_column_text(_statement_, __column__)? \
-									make_nil_if_null([NSString stringWithUTF8String:(char *)sqlite3_column_text(_statement_, __column__)]):nil
-
-#define sqlite3_to_string sqlite3_column_nsstring
-
 typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 
 @interface SQLiteLibrary : NSObject
