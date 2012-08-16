@@ -5,7 +5,6 @@
 
 
 #import "SQLiteLibrary.h"
-#import "ODBMacros.h"
 
 
 @implementation SQLiteLibrary

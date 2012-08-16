@@ -7,6 +7,8 @@
 #import <Foundation/Foundation.h>
 #import <sqlite3.h>
 
+#define ODBsprintf(format, ...) [NSString stringWithFormat:format, ## __VA_ARGS__]
+
 #define sqlite_now_epoch @"strftime('%s','now')"
 #define make_nil_if_null(__string__) (__string__==nil||[__string__ isEqualToString:@"(null)"])?nil:__string__
 
