@@ -1,3 +1,7 @@
+## Bugfix 2012-08-16: Removed a dependency to a custom library.
+
+# Info
+
 This is a very simple *thread safe* SQLite wrapper for Mac OS X and iOS development.
 
 It is a singleton, so it allows for a single database connection. That being said, the library is thread
@@ -15,7 +19,7 @@ Before using the library you have to set the name of your preferred database fil
     [SQLiteLibrary setDatabaseFileInCache:@"dbstuff.sqlite"];
      
     # Store database data in the persistent documents folder
-    [SQLiteLibrary setDatabaseFileInCache:@"dbstuff.sqlite"];
+    [SQLiteLibrary setDatabaseFileInDocuments:@"dbstuff.sqlite"];
 
 After setting the file name, the code below will copy the file **data_skeleton.sqlite3** to the file you specified above.
 Note that this will **NOT** override the file, **UNLESS** you specify `YES` as the `ForceReset` parameter.
