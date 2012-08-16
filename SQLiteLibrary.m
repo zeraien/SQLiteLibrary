@@ -185,7 +185,7 @@
 		[self begin];
 	}
 	NSAssert(database!=nil, @"Must begin a transaction first.");
-	if (database == nil) return NO;
+    if (database == nil) return [NSArray new];
 
 #if DEBUG_LOG>=2
 	NSLog(@"Performing query:\n\t%@", query);
