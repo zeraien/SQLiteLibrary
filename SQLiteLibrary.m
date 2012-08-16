@@ -5,12 +5,24 @@
 
 
 #import "SQLiteLibrary.h"
-#import "ODBMacros.h"
 
 
 @implementation SQLiteLibrary
 {
     NSString* dbFilePath_;
+}
+
+static SQLiteLibrary* _instance;
+
++ (void)initialize
+{
+    [super initialize];
+    _instance = [[self alloc] init];
+}
+
++ (SQLiteLibrary *)singleton
+{
+	return _instance;
 }
 
 + (void)setDatabaseFileInCache:(NSString *)dbFilename
@@ -33,25 +45,13 @@
     SQLiteLibrary * me = [self singleton];
     @synchronized (self)
     {
-        [me->dbFilePath_ release]; me->dbFilePath_ = nil;
+#if !__has_feature(objc_arc)
+        [me->dbFilePath_ release];
+#endif
+        me->dbFilePath_ = nil;
 
         me->dbFilePath_ = [dbFilePath copy];
     }
-}
-
-+ (SQLiteLibrary *)singleton
-{
-	static SQLiteLibrary *_instance = nil;
-
-	@synchronized (self)
-	{
-		if (_instance == nil)
-		{
-			_instance = [[self alloc] init];
-		}
-	}
-
-	return _instance;
 }
 
 - (id)init
@@ -69,8 +69,10 @@
 
 - (void)dealloc
 {
+#if !__has_feature(objc_arc)
     [lock release];
     [super dealloc];
+#endif
 }
 
 + (BOOL)begin
@@ -138,7 +140,7 @@
             }
             case SQLITE_FLOAT:
             {
-                float value = sqlite3_column_int(statement, i);
+                float value = (float)sqlite3_column_double(statement, i);
                 [result setObject:[NSNumber numberWithFloat:value] forKey:columnName];
                 break;
             }
@@ -164,7 +166,11 @@
 
         } //end switch
     }
+#if __has_feature(objc_arc)
+    return result;
+#else
     return [result autorelease];
+#endif
 }
 
 + (NSArray *)performQueryAndGetResultList:(NSString *)query
@@ -186,7 +192,8 @@
 		[self begin];
 	}
 	NSAssert(database!=nil, @"Must begin a transaction first.");
-	if (database == nil) return NO;
+//    if (database == nil) return NO; //TODO: revert?
+    if (database == nil) return [NSArray new];
 
 #if DEBUG_LOG>=2
 	NSLog(@"Performing query:\n\t%@", query);
@@ -251,7 +258,9 @@
 	sqlite3_stmt *compiledStatement;
 	if(sqlite3_prepare_v2(database, [query UTF8String], -1, &compiledStatement, NULL) == SQLITE_OK) {
 		// Loop through the results and add them to the feeds array
+#if !__has_feature(objc_arc)
 		[block retain];
+#endif
 		int resultCount = 0;
 		while(sqlite3_step(compiledStatement) == SQLITE_ROW) {
 			// Read the data from the result row
@@ -272,8 +281,9 @@
 			returnValue = resultCount;
 		else
 			returnValue = sqlite3_changes(database);
-
+#if !__has_feature(objc_arc)
 		[block release];
+#endif
 	}
 #if DEBUG_LOG>=1
 	else
