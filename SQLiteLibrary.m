@@ -12,6 +12,19 @@
     NSString* dbFilePath_;
 }
 
+static SQLiteLibrary* _instance;
+
++ (void)initialize
+{
+    [super initialize];
+    _instance = [[self alloc] init];
+}
+
++ (SQLiteLibrary *)singleton
+{
+	return _instance;
+}
+
 + (void)setDatabaseFileInCache:(NSString *)dbFilename
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
@@ -39,21 +52,6 @@
 
         me->dbFilePath_ = [dbFilePath copy];
     }
-}
-
-+ (SQLiteLibrary *)singleton
-{
-	static SQLiteLibrary *_instance = nil;
-
-	@synchronized (self)
-	{
-		if (_instance == nil)
-		{
-			_instance = [[self alloc] init];
-		}
-	}
-
-	return _instance;
 }
 
 - (id)init
