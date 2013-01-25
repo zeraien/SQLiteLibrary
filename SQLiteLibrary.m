@@ -16,6 +16,28 @@
 #import "SQLiteLibrary.h"
 
 #define ODBsprintf(format, ...) [NSString stringWithFormat:format, ## __VA_ARGS__]
+#define make_nil_if_null(__string__) (__string__==nil||[__string__ isEqualToString:@"(null)"])?nil:__string__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+NSString* sqlite3_column_nsstring(sqlite3_stmt* statement, int column)
+{
+    char* data = (char *)sqlite3_column_text(statement, column);
+    if (data)
+    {
+        return make_nil_if_null([NSString stringWithUTF8String:data]);
+    }
+    else
+    {
+        return nil;
+    }
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 @implementation SQLiteLibrary
 {
