@@ -111,6 +111,52 @@ static SQLiteLibrary* _instance;
 {
 	return [[self singleton] begin];
 }
+
++ (BOOL)verifyDatabaseFile
+{
+    return [[self singleton]verifyDatabaseFile];
+}
+- (BOOL)verifyDatabaseFile
+{
+	NSString*dbPath = dbFilePath_;
+    NSAssert(dbPath!=nil, @"Database file not set, perhaps you need to run `setDatabaseFileIn[Cache|Documents]:`");
+
+#if DEBUG_LOG>=2
+	NSLog(@"Using sqlite database at path %@", dbPath);
+#endif
+	NSAssert(database==nil, @"Attempted to start transaction while another is in progress.");
+	
+#if DEBUG_LOG>=2
+    NSLog(@"Begin db verification...");
+#endif
+    
+    if (![[NSFileManager defaultManager] isReadableFileAtPath:dbFilePath_])
+    {
+#if DEBUG_LOG>=2
+        NSLog(@"DB File not found: %@", dbPath);
+#endif
+
+        return NO;
+    }
+    
+	if(sqlite3_open([dbPath UTF8String], &database) == SQLITE_OK)
+    {
+        sqlite3_exec(database, "PRAGMA quick_check;", NULL, NULL, NULL);
+        if (sqlite3_errcode(database) != SQLITE_DONE && sqlite3_errcode(database)>0)
+		{
+#if DEBUG_LOG>=1
+			NSLog(@"!!!!!!> SQLITE ERROR ===============> %d - %@", sqlite3_errcode(database), [NSString stringWithCString:sqlite3_errmsg(database) encoding:NSUTF8StringEncoding]);
+#endif
+			return NO;
+		}
+		return YES;
+	}
+#if DEBUG_LOG>=1
+	NSLog(@"!!!!!!> SQLITE ERROR ===============> Failed to open SQLite database %@;", dbPath);
+#endif
+    return NO;
+}
+
 - (BOOL)begin
 {
     [lock lock];

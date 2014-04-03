@@ -17,7 +17,6 @@
 #import <sqlite3.h>
 
 #define sqlite_now_epoch @"strftime('%s','now')"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,8 +26,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#define sqlite3_to_string sqlite3_column_nsstring
 
 typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 
@@ -54,6 +51,10 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 + (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement;
 
 + (NSArray*)performQueryAndGetResultList:(NSString*)query;
+
+- (BOOL)verifyDatabaseFile;
+
++ (BOOL)verifyDatabaseFile;
 
 
 /**
