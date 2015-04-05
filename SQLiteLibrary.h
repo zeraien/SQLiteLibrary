@@ -36,31 +36,74 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 }
 + (SQLiteLibrary *)singleton;
 
+/**
+* Sets the database file name that will be used for the remainder of the singleton lifetime
+* The database file will be looked for in the default documents folder.
+* This (or any of the other setDatabase... methods) must be the first method run before anything can be done with the library.
+*
+* @param dbFilePath Absolute path to the database file
+*/
 + (void)setDatabaseFile:(NSString *)dbFilePath;
 
+/**
+* Sets the database file name that will be used for the remainder of the singleton lifetime
+* The database file will be looked for in the default documents folder.
+* This (or any of the other setDatabase... methods) must be the first method run before anything can be done with the library.
+*
+* @param dbFilename path to the database file relative to DOCUMENTS folder
+*/
 + (void)setDatabaseFileInDocuments:(NSString *)dbFilename;
 
+/**
+* Sets the database file name that will be used for the remainder of the singleton lifetime.
+* The database file will be looked for in the default cache folder.
+* This (or any of the other setDatabase... methods) must be the first method run before anything can be done with the library.
+*
+* @param dbFilename path to the database file relative to CACHE folder
+*/
 + (void)setDatabaseFileInCache:(NSString *)dbFilename;
+
+/**
+* Return a dictionary for the sqlite statement.
+* The keys are column names. When using joins and custom columns, make sure to use "AS" to specify unique column names.
+*
+* @param statement sqlite3 statement object for one row.
+*/
++ (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement;
 
 
 /**
-* Begin transaction (singleton edition)
+* Return a dictionary with the result of the provided SQL select query.
+* The keys are column names. When using joins and custom columns, make sure to use "AS" to specify unique column names.
+*
+* @param query SELECT query
 */
-+ (BOOL)begin;
-
-+ (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement;
 
 + (NSArray*)performQueryAndGetResultList:(NSString*)query;
 
 - (BOOL)verifyDatabaseFile;
 
+/**
+* Verify integrity of the database file.
+*/
 + (BOOL)verifyDatabaseFile;
 
+/** Perform an INSERT.
+* If no transaction has been started, the method will start a new transaction and auto-commit at the end of the query.
+*
+* @param tableName SQL query
+* @param data Dictionary with table column names as keys and data as values.
+* @return returns the id of the last inserted row
+* */
 
-/**
-* Commit transaction (singleton edition)
-*/
-+ (BOOL)commit;
+/** Perform an INSERT OR REPLACE.
+* If any unique constraint fails, the row will be replaced (see SQLite docs on INSERT OR REPLACE).
+* If no transaction has been started, the method will start a new transaction and auto-commit at the end of the query.
+*
+* @param tableName SQL query
+* @param data Dictionary with table column names as keys and data as values.
+* @return returns the id of the last inserted row
+* */
 
 /**
 * See +performQuery:block:
@@ -78,9 +121,19 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 
 /**
 * Copy database skeleton to user's documents directory.
-* @param forceReset if True, overwrite existing database in user's documents directory
+* @param forceReset if True, overwrite existing database file
 */
 + (void)setupDatabaseAndForceReset:(BOOL)forceReset;
+
+/**
+* Begin transaction (singleton edition)
+*/
++ (BOOL)begin;
+
+/**
+* Commit transaction (singleton edition)
+*/
++ (BOOL)commit;
 
 /**
 * Begin transaction
