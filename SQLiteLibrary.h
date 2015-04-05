@@ -81,6 +81,8 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 
 + (NSArray*)performQueryAndGetResultList:(NSString*)query;
 
+- (NSArray *)performQueryAndGetResultList:(NSString *)query;
+
 - (BOOL)verifyDatabaseFile;
 
 /**
