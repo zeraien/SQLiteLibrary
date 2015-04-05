@@ -433,6 +433,95 @@ static SQLiteLibrary* _instance;
 	return success;
 }
 
++ (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [[self singleton] performInsertQueryInTable:tableName data:data];
+}
+- (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [self performInsertQueryInTable:tableName data:data allowReplace:NO];
+}
+
++ (int64_t)performReplaceQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [[self singleton] performReplaceQueryInTable:tableName data:data];
+}
+
+- (int64_t)performReplaceQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [self performInsertQueryInTable:tableName data:data allowReplace:YES];
+}
+
++ (int64_t)performUpdateQueryInTable:(NSString*)tableName data:(NSDictionary*)data idColumn:(NSString*)idColumn
+{
+    return [[self singleton] performUpdateQueryInTable:tableName data:data idColumn:idColumn];
+}
+
+- (int64_t)performUpdateQueryInTable:(NSString*)tableName data:(NSDictionary*)data idColumn:(NSString*)idColumn
+{
+    NSMutableArray* values = [NSMutableArray arrayWithCapacity:[data count]];
+    id idValue = nil;
+    for (NSString*columnKey in [data allKeys])
+    {
+        id value = data[columnKey];
+        id fixedValue = nil;
+        if ([value isKindOfClass:[NSString class]])
+            fixedValue = [escape_string(value) copy];
+        else if (value==[NSNull null])
+            fixedValue = @"NULL";
+        else
+            fixedValue = [value copy];
+
+        if ([columnKey isEqualToString:idColumn])
+        {
+            idValue = [fixedValue copy];
+        }
+        else
+        {
+            [values addObject:ODBsprintf(@"%@ = %@", columnKey, fixedValue)];
+        }
+    }
+
+    NSString* queryString = ODBsprintf(
+    @"UPDATE %@ SET %@ WHERE %@ = %@",
+    tableName,
+    [values componentsJoinedByString:@","],
+    idColumn,
+    idValue
+    );
+
+    return [self performQueryInTransaction:queryString block:nil];
+
+}
+
+- (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data allowReplace:(BOOL)allowReplace
+{
+    NSMutableDictionary * queryData = [NSMutableDictionary dictionaryWithCapacity:[data count]];
+    for (NSString* key in [data allKeys])
+    {
+        id value = data[key];
+        if ([value isKindOfClass:[NSString class]])
+            queryData[key] = escape_string(value);
+        else if (value==[NSNull null])
+            queryData[key] = @"NULL";
+        else
+            queryData[key] = value;
+    }
+    NSString* orReplace = @"";
+    if (allowReplace) orReplace = @"OR REPLACE";
+
+    NSString* queryString = ODBsprintf(
+    @"INSERT %@ INTO %@ (%@) VALUES(%@)",
+        orReplace,
+        tableName,
+        [[queryData allKeys] componentsJoinedByString:@","],
+        [[queryData allValues] componentsJoinedByString:@","]
+    );
+
+    return [self performQueryInTransaction:queryString block:nil];
+
+}
+
 + (int64_t)performQuery:(NSString *)query block:(SQLiteBlock)block
 {
 	return [[self singleton] performQueryInTransaction:query block:block];

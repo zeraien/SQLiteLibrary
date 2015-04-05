@@ -99,6 +99,8 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 * @return returns the id of the last inserted row
 * */
 
++ (int64_t)performInsertQueryInTable:(NSString *)tableName data:(NSDictionary *)data;
+
 /** Perform an INSERT OR REPLACE.
 * If any unique constraint fails, the row will be replaced (see SQLite docs on INSERT OR REPLACE).
 * If no transaction has been started, the method will start a new transaction and auto-commit at the end of the query.
@@ -107,6 +109,9 @@ typedef void (^SQLiteBlock)(sqlite3_stmt *compiledStatement);
 * @param data Dictionary with table column names as keys and data as values.
 * @return returns the id of the last inserted row
 * */
++ (int64_t)performReplaceQueryInTable:(NSString *)tableName data:(NSDictionary *)data;
+
++ (int64_t)performUpdateQueryInTable:(NSString *)tableName data:(NSDictionary *)data idColumn:(NSString *)idColumn;
 
 /**
 * See +performQuery:block:
