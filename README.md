@@ -104,4 +104,4 @@ There is currently no rollback support.
 
 ## sqlite3\_column\_nsstring
 
-I've written a custom macro *sqlite3_column_nsstring* for extracting NSString objects from SQLite c strings.
+For `NSString` support I wrote a custom function `sqlite3_column_nsstring`, it behaves like other sqlite3 functions but returns an `NSString` instead of a C string.
