@@ -121,7 +121,7 @@ static SQLiteLibrary* _instance;
 	NSString*dbPath = dbFilePath_;
     NSAssert(dbPath!=nil, @"Database file not set, perhaps you need to run `setDatabaseFileIn[Cache|Documents]:`");
 
-#if DEBUG_LOG>=2
+#if DEBUG_LOG>=1
 	NSLog(@"Using sqlite database at path %@", dbPath);
 #endif
 	NSAssert(database==nil, @"Attempted to start transaction while another is in progress.");
@@ -422,6 +422,10 @@ static SQLiteLibrary* _instance;
 - (void)setupDatabaseAndForceReset:(BOOL)forceReset
 {
     NSAssert(dbFilePath_!=nil, @"dbFilePath must be set!");
+
+#if DEBUG_LOG>=1
+	NSLog(@"Using sqlite database at path %@", dbFilePath_);
+#endif
 
     NSString* defaultDB = [[NSBundle mainBundle]pathForResource:@"data_skeleton" ofType:@"sqlite3"];
     NSString* appFile = dbFilePath_;
