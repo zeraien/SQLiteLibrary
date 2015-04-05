@@ -22,6 +22,14 @@
 extern "C" {
 #endif
 
+NSString* escape_string(id value)
+{
+    if ([value isKindOfClass:[NSString class]])
+        return ODBsprintf(@"\"%@\"",[value stringByReplacingOccurrencesOfString:@"\"" withString:@"\"\""]);
+    else
+        return value;
+}
+
 NSString* sqlite3_column_nsstring(sqlite3_stmt* statement, int column)
 {
     char* data = (char *)sqlite3_column_text(statement, column);
@@ -251,6 +259,17 @@ static SQLiteLibrary* _instance;
 #endif
 }
 
++ (BOOL)isId:(id)value columnName:(NSString*)columnName inTable:(NSString*)tableName
+{
+    return [[self singleton] isId:value columnName:columnName inTable:tableName];
+}
+- (BOOL)isId:(id)value columnName:(NSString*)columnName inTable:(NSString*)tableName
+{
+    NSString* query = ODBsprintf(@"SELECT count(%@) as count FROM %@ WHERE %@ = %@", columnName, tableName, columnName, escape_string(value));
+    NSArray *results = [SQLiteLibrary performQueryAndGetResultList:query];
+
+    return ([results count] && [results[0][@"count"]intValue]>0);
+}
 + (NSArray *)performQueryAndGetResultList:(NSString *)query
 {
     return [[self singleton] performQueryAndGetResultList:query];
