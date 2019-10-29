@@ -22,6 +22,14 @@
 extern "C" {
 #endif
 
+NSString* escape_string(id value)
+{
+    if ([value isKindOfClass:[NSString class]])
+        return ODBsprintf(@"\"%@\"",[value stringByReplacingOccurrencesOfString:@"\"" withString:@"\"\""]);
+    else
+        return value;
+}
+
 NSString* sqlite3_column_nsstring(sqlite3_stmt* statement, int column)
 {
     char* data = (char *)sqlite3_column_text(statement, column);
@@ -121,7 +129,7 @@ static SQLiteLibrary* _instance;
 	NSString*dbPath = dbFilePath_;
     NSAssert(dbPath!=nil, @"Database file not set, perhaps you need to run `setDatabaseFileIn[Cache|Documents]:`");
 
-#if DEBUG_LOG>=2
+#if DEBUG_LOG>=1
 	NSLog(@"Using sqlite database at path %@", dbPath);
 #endif
 	NSAssert(database==nil, @"Attempted to start transaction while another is in progress.");
@@ -251,6 +259,17 @@ static SQLiteLibrary* _instance;
 #endif
 }
 
++ (BOOL)isId:(id)value columnName:(NSString*)columnName inTable:(NSString*)tableName
+{
+    return [[self singleton] isId:value columnName:columnName inTable:tableName];
+}
+- (BOOL)isId:(id)value columnName:(NSString*)columnName inTable:(NSString*)tableName
+{
+    NSString* query = ODBsprintf(@"SELECT count(%@) as count FROM %@ WHERE %@ = %@", columnName, tableName, columnName, escape_string(value));
+    NSArray *results = [SQLiteLibrary performQueryAndGetResultList:query];
+
+    return ([results count] && [results[0][@"count"]intValue]>0);
+}
 + (NSArray *)performQueryAndGetResultList:(NSString *)query
 {
     return [[self singleton] performQueryAndGetResultList:query];
@@ -414,6 +433,95 @@ static SQLiteLibrary* _instance;
 	return success;
 }
 
++ (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [[self singleton] performInsertQueryInTable:tableName data:data];
+}
+- (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [self performInsertQueryInTable:tableName data:data allowReplace:NO];
+}
+
++ (int64_t)performReplaceQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [[self singleton] performReplaceQueryInTable:tableName data:data];
+}
+
+- (int64_t)performReplaceQueryInTable:(NSString*)tableName  data:(NSDictionary*)data
+{
+    return [self performInsertQueryInTable:tableName data:data allowReplace:YES];
+}
+
++ (int64_t)performUpdateQueryInTable:(NSString*)tableName data:(NSDictionary*)data idColumn:(NSString*)idColumn
+{
+    return [[self singleton] performUpdateQueryInTable:tableName data:data idColumn:idColumn];
+}
+
+- (int64_t)performUpdateQueryInTable:(NSString*)tableName data:(NSDictionary*)data idColumn:(NSString*)idColumn
+{
+    NSMutableArray* values = [NSMutableArray arrayWithCapacity:[data count]];
+    id idValue = nil;
+    for (NSString*columnKey in [data allKeys])
+    {
+        id value = data[columnKey];
+        id fixedValue = nil;
+        if ([value isKindOfClass:[NSString class]])
+            fixedValue = [escape_string(value) copy];
+        else if (value==[NSNull null])
+            fixedValue = @"NULL";
+        else
+            fixedValue = [value copy];
+
+        if ([columnKey isEqualToString:idColumn])
+        {
+            idValue = [fixedValue copy];
+        }
+        else
+        {
+            [values addObject:ODBsprintf(@"%@ = %@", columnKey, fixedValue)];
+        }
+    }
+
+    NSString* queryString = ODBsprintf(
+    @"UPDATE %@ SET %@ WHERE %@ = %@",
+    tableName,
+    [values componentsJoinedByString:@","],
+    idColumn,
+    idValue
+    );
+
+    return [self performQueryInTransaction:queryString block:nil];
+
+}
+
+- (int64_t)performInsertQueryInTable:(NSString*)tableName  data:(NSDictionary*)data allowReplace:(BOOL)allowReplace
+{
+    NSMutableDictionary * queryData = [NSMutableDictionary dictionaryWithCapacity:[data count]];
+    for (NSString* key in [data allKeys])
+    {
+        id value = data[key];
+        if ([value isKindOfClass:[NSString class]])
+            queryData[key] = escape_string(value);
+        else if (value==[NSNull null])
+            queryData[key] = @"NULL";
+        else
+            queryData[key] = value;
+    }
+    NSString* orReplace = @"";
+    if (allowReplace) orReplace = @"OR REPLACE";
+
+    NSString* queryString = ODBsprintf(
+    @"INSERT %@ INTO %@ (%@) VALUES(%@)",
+        orReplace,
+        tableName,
+        [[queryData allKeys] componentsJoinedByString:@","],
+        [[queryData allValues] componentsJoinedByString:@","]
+    );
+
+    return [self performQueryInTransaction:queryString block:nil];
+
+}
+
 + (int64_t)performQuery:(NSString *)query block:(SQLiteBlock)block
 {
 	return [[self singleton] performQueryInTransaction:query block:block];
@@ -422,6 +530,10 @@ static SQLiteLibrary* _instance;
 - (void)setupDatabaseAndForceReset:(BOOL)forceReset
 {
     NSAssert(dbFilePath_!=nil, @"dbFilePath must be set!");
+
+#if DEBUG_LOG>=1
+	NSLog(@"Using sqlite database at path %@", dbFilePath_);
+#endif
 
     NSString* defaultDB = [[NSBundle mainBundle]pathForResource:@"data_skeleton" ofType:@"sqlite3"];
     NSString* appFile = dbFilePath_;
