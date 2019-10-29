@@ -468,7 +468,7 @@ static SQLiteLibrary* _instance;
         if ([value isKindOfClass:[NSString class]])
             fixedValue = [escape_string(value) copy];
         else if (value==[NSNull null])
-            fixedValue = @"NULL";
+            fixedValue = [@"NULL" copy];
         else
             fixedValue = [value copy];
 
@@ -480,7 +480,8 @@ static SQLiteLibrary* _instance;
         {
             [values addObject:ODBsprintf(@"%@ = %@", columnKey, fixedValue)];
         }
-    }
+		[fixedValue release];
+	}
 
     NSString* queryString = ODBsprintf(
     @"UPDATE %@ SET %@ WHERE %@ = %@",
@@ -490,7 +491,8 @@ static SQLiteLibrary* _instance;
     idValue
     );
 
-    return [self performQueryInTransaction:queryString block:nil];
+	[idValue release];
+	return [self performQueryInTransaction:queryString block:nil];
 
 }
 
