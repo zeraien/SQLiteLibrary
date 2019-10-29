@@ -60,7 +60,7 @@ static SQLiteLibrary* _instance;
 + (void)setDatabaseFileInCache:(NSString *)dbFilename
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *directory = [paths objectAtIndex:0];
+    NSString *directory = paths[0];
     NSString* appFile = [directory stringByAppendingPathComponent:dbFilename];
     [self setDatabaseFile:appFile];
 
@@ -68,7 +68,7 @@ static SQLiteLibrary* _instance;
 + (void)setDatabaseFileInDocuments:(NSString *)dbFilename
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *directory = [paths objectAtIndex:0];
+    NSString *directory = paths[0];
     NSString* appFile = [directory stringByAppendingPathComponent:dbFilename];
     [self setDatabaseFile:appFile];
 }
@@ -200,7 +200,7 @@ static SQLiteLibrary* _instance;
 + (NSDictionary *)dictionaryForRowData:(sqlite3_stmt *)statement {
 
     int columns = sqlite3_column_count(statement);
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] initWithCapacity:columns];
+    NSMutableDictionary *result = [[NSMutableDictionary alloc] initWithCapacity:(NSUInteger) columns];
 
     for (int i = 0; i<columns; i++) {
         const char *name = sqlite3_column_name(statement, i);
@@ -213,19 +213,19 @@ static SQLiteLibrary* _instance;
             case SQLITE_INTEGER:
             {
                 int value = sqlite3_column_int(statement, i);
-                [result setObject:[NSNumber numberWithInt:value] forKey:columnName];
+				result[columnName] = @(value);
                 break;
             }
             case SQLITE_FLOAT:
             {
                 float value = (float)sqlite3_column_double(statement, i);
-                [result setObject:[NSNumber numberWithFloat:value] forKey:columnName];
+				result[columnName] = @(value);
                 break;
             }
             case SQLITE_TEXT:
             {
                 const char *value = (const char*)sqlite3_column_text(statement, i);
-                [result setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:columnName];
+                result[columnName] = [NSString stringWithCString:value encoding:NSUTF8StringEncoding];
                 break;
             }
 
@@ -238,7 +238,7 @@ static SQLiteLibrary* _instance;
             default:
             {
                 const char *value = (const char *)sqlite3_column_text(statement, i);
-                [result setObject:[NSString stringWithCString:value encoding:NSUTF8StringEncoding] forKey:columnName];
+                result[columnName] = [NSString stringWithCString:value encoding:NSUTF8StringEncoding];
                 break;
             }
 
